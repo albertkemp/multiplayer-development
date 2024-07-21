@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Comment posting</title>
+        <script src="https://accounts.google.com/gsi/client" onload="initClient()" async defer></script>
+    </head>
+    <body onload="getToken()">
+        <script>    
+            var client;
+            var access_token;
+
+            function initClient() {
+                client = google.accounts.oauth2.initTokenClient({
+                    client_id: '226709415864-ac5fq30k52hhdnn12dq3csuimlujtle3.apps.googleusercontent.com',
+                    scope: 'https://www.googleapis.com/auth/spreadsheets',
+                    callback: (tokenResponse) => {
+                        access_token = tokenResponse.access_token;
+                    }, 
+                });
+            }
+            async function getToken(){
+                await client.requestAccessToken();
+                console.log("Access token received");
+            }
+            function writeSheet(){
+                var commentInput = document.getElementById('commentInput');
+                var comment = commentInput.value;
+                var spreadsheetId = '1hdorOCQ1gB3miH0I0h4JH2PauSVRmIkJE3BrhWRDjrE';
+                var range = 'Sheet1!A2:A2';
+                var xhr = new XMLHttpRequest();
+                var params = {
+                    "range": range,
+                    "majorDimension": "ROWS",
+                    "values": [
+                        [comment]
+                    ],
+                };
+                xhr.open('PUT', `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`);
+                console.log(access_token);
+                xhr.setRequestHeader('Authorization', 'Bearer ' + access_token);
+                xhr.send(JSON.stringify(params));
+            }
+        </script>
+        <input id="commentInput" placeholder="Comment value..">
+        <button onclick="writeSheet()">Send</button>
+    </body>
+</html>

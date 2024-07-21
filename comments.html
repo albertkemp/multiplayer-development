@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://accounts.google.com/gsi/client" onload="initClient()" async defer></script>
+  </head>
+  <body onload="getToken()">
+    <script>
+      var client;
+      var access_token;
+
+    function initClient() {
+        client = google.accounts.oauth2.initTokenClient({
+            client_id: '226709415864-ac5fq30k52hhdnn12dq3csuimlujtle3.apps.googleusercontent.com',
+            scope: 'https://www.googleapis.com/auth/spreadsheets',
+            callback: (tokenResponse) => {
+                access_token = tokenResponse.access_token;
+                setInterval(readSheet, 1000); // Call readSheet() after receiving the token
+            },
+        });
+    }
+     
+    async function getToken() {
+        await client.requestAccessToken();
+            console.log("Access token received");
+    }
+      
+    function readSheet() {
+        var spreadsheetId = '1hdorOCQ1gB3miH0I0h4JH2PauSVRmIkJE3BrhWRDjrE';
+        var range = 'Sheet1!A2:B';
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var response = JSON.parse(this.responseText);
+                var value = response.values[0][1]; // Assuming A2 cell value is in the second column (index 1)
+                console.log(value);
+                var values = response.values;
+                var content = '';
+                for (var i = 0; i < values.length; i++) {
+                    var cellValue = '<p>'+values[i][0]+'</p>' + '<p>'+values[i][1]+'</p>';
+                    content += cellValue;
+                }
+                document.getElementById('content').innerHTML = content;
+            }
+        };
+        xhr.open('GET', `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`);
+        xhr.setRequestHeader('Authorization', 'Bearer ' + access_token);
+        xhr.send();
+        console.log("Read sheet executed second");
+      }
+      function revokeToken() {
+        google.accounts.oauth2.revoke(access_token, () => {console.log('access token revoked')});
+      }
+      function loadCalendar() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'https://www.googleapis.com/calendar/v3/calendars/primary/events');
+        xhr.setRequestHeader('Authorization', 'Bearer ' + access_token);
+        xhr.send();
+      }
+    </script>
+    <h1>Comments section (test)</h1>
+    <div id="content"></div>
+  </body>
+</html>
