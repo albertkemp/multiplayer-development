@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>New webpage</title>
+  <style>
+    #player {
+      background-color: red;
+      width: 100px;
+      height: 100px;
+      position: relative;
+      /* Necessary for the animation to work */
+    }
+  </style>
+</head>
+
+<body>
+  <div id="player"></div>
+  <script>
+    // Variables for keyframes
+    const fromTop = 0;
+    const toTop = 100;
+    const fromLeft = 0;
+    const toLeft = 100;
+
+    // Create a style element
+    const style = document.createElement('style');
+    document.head.appendChild(style);
+
+    // Define keyframes
+    const keyframes = `
+            @keyframes animate {
+                from { top: ${fromTop}px; left: ${fromLeft}px; }
+                to { top: ${toTop}px; left: ${toLeft}px; }
+            }
+        `;
+
+    // Append the keyframes to the style element
+    style.sheet.insertRule(keyframes, style.sheet.cssRules.length);
+
+    // Apply the animation to the player element
+    const player = document.getElementById('player');
+    player.style.animation = 'animate 2s infinite';
+  </script>
+</body>
+
+</html>
