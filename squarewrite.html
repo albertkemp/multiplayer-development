@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://accounts.google.com/gsi/client" onload="initClient()" async defer></script>
+    <style>#player {
+        background-color: red;
+        height: 100px;
+        width: 100px;
+        position: absolute; /* Added position property */
+    }</style>
+  </head>
+  <body onload="getToken()">
+    <script>
+    var speed = 20;
+    var x = 0; // Initial horizontal position
+    var y = 0; // Initial vertical position
+    
+window.addEventListener('load', function(){
+    var player = document.getElementById('player');
+    player.style.top = y + 'px';
+    player.style.left = x + 'px';
+    getToken();
+});
+    document.onkeydown = function(event) {
+        switch (event.keyCode) {
+            case 37: // Left arrow
+                x-=speed;
+                break;
+            case 38: // Up arrow
+                y-=speed;
+                break;
+            case 39: // Right arrow
+                x+=speed;
+                break;
+            case 40: // Down arrow
+                y+=speed;
+                break;
+        }
+        player.style.top = y + 'px';
+        player.style.left = x + 'px';
+    };
+      var client;
+      var access_token;
+
+    function initClient() {
+        client = google.accounts.oauth2.initTokenClient({
+            client_id: '226709415864-ac5fq30k52hhdnn12dq3csuimlujtle3.apps.googleusercontent.com',
+            scope: 'https://www.googleapis.com/auth/spreadsheets',
+            callback: (tokenResponse) => {
+                access_token = tokenResponse.access_token;
+                //setInterval(readSheet, 1000); // Call readSheet() after receiving the token
+                setInterval(writeSheet, 1000); // Call writeSheet() after receiving the token
+            },
+        });
+    }
+     
+    async function getToken() {
+        await client.requestAccessToken();
+            console.log("Access token received");
+    }
+        function writeSheet(){
+                var spreadsheetId = '1hdorOCQ1gB3miH0I0h4JH2PauSVRmIkJE3BrhWRDjrE';
+                var range = 'Sheet1!A3:B3';
+                var xhr = new XMLHttpRequest();
+                var params = {
+                    "range": range,
+                    "majorDimension": "ROWS",
+                    "values": [
+                        [x,y]
+                    ],
+                };
+                xhr.open('PUT', `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`);
+                console.log(access_token);
+                xhr.setRequestHeader('Authorization', 'Bearer ' + access_token);
+                xhr.send(JSON.stringify(params));
+        }
+      function revokeToken() {
+        google.accounts.oauth2.revoke(access_token, () => {console.log('access token revoked')});
+      }
+      function loadCalendar() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'https://www.googleapis.com/calendar/v3/calendars/primary/events');
+        xhr.setRequestHeader('Authorization', 'Bearer ' + access_token);
+        xhr.send();
+      }
+      
+    </script>
+    <div id="player"></div>
+  </body>
+</html>

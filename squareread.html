@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://accounts.google.com/gsi/client" onload="initClient()" async defer></script>
+    <style>#player {
+        background-color: red;
+        height: 100px;
+        width: 100px;
+        position: relative; /* Added position property */
+    }</style>
+  </head>
+  <body onload="getToken()">
+    <script>
+        let fromTop = 0;
+    let toTop = 100;
+    let fromLeft = 0;
+    let toLeft = 100;
+
+    // Create a style element
+    const style = document.createElement('style');
+    document.head.appendChild(style);
+
+    // Define keyframes
+    const keyframes = `
+            @keyframes animate {
+                from { top: ${fromTop}px; left: ${fromLeft}px; }
+                to { top: ${toTop}px; left: ${toLeft}px; }
+            }
+        `;
+
+    // Append the keyframes to the style element
+    style.sheet.insertRule(keyframes, style.sheet.cssRules.length);
+
+    // Apply the animation to the player element
+    
+    var player;
+    
+
+        var speed = 20;
+   // Ensure x and y are defined globally
+   var oldX = 0;
+   var oldY=0;
+var x = 0; // Initial horizontal position
+var y = 0; // Initial vertical position
+
+// Ensure player is globally accessible
+//var player;
+
+window.addEventListener('load', function() {
+    player = document.getElementById('player');
+    //player.style.animation = 'animate 2s';
+    player.style.top = y + 'px';
+    player.style.left = x + 'px';
+    getToken();
+});
+/*
+document.onkeydown = function(event) {
+    switch (event.keyCode) {
+        case 37: // Left arrow
+            x -= speed;
+            break;
+        case 38: // Up arrow
+            y -= speed;
+            break;
+        case 39: // Right arrow
+            x += speed;
+            break;
+        case 40: // Down arrow
+            y += speed;
+            break;
+    }
+    updatePlayerPosition();
+};*/
+
+function updatePlayerPosition() {
+    if (player) {
+        player.style.animation = 'animate 2s infinite';
+        player.style.top = y + 'px';
+        player.style.left = x + 'px';
+    }
+}
+      var client;
+      var access_token;
+
+    function initClient() {
+        client = google.accounts.oauth2.initTokenClient({
+            client_id: '226709415864-ac5fq30k52hhdnn12dq3csuimlujtle3.apps.googleusercontent.com',
+            scope: 'https://www.googleapis.com/auth/spreadsheets',
+            callback: (tokenResponse) => {
+                access_token = tokenResponse.access_token;
+                setInterval(readSheet, 1000); // Call readSheet() after receiving the token
+                //setInterval(writeSheet, 1000); // Call writeSheet() after receiving the token
+                setInterval(updatePlayerPosition, 1000);
+            },
+        });
+    }
+     
+    async function getToken() {
+        await client.requestAccessToken();
+            console.log("Access token received");
+    } 
+    function readSheet(){
+        var spreadsheetId = '1hdorOCQ1gB3miH0I0h4JH2PauSVRmIkJE3BrhWRDjrE';
+        var range = 'Sheet1!A3:C3';
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET',`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`);
+        xhr.setRequestHeader('Authorization', 'Bearer ' + access_token);
+        xhr.onreadystatechange = function(e) {
+            if(xhr.responseText){
+                var responseObject = JSON.parse(xhr.responseText);
+                var valuesArray = responseObject.values;
+                //console.log(valuesArray[0][0]);
+                //console.log(valuesArray[0][1]);
+                x=valuesArray[0][0];
+                y=valuesArray[0][1];
+                fromTop = oldY;
+                toTop = y;
+                fromLeft = oldX;
+                toLeft = x;
+                oldX = x;
+                oldY = y;
+                console.log(x);
+                console.log(y);
+            }
+        };
+        xhr.send(null);
+    }
+    
+      function revokeToken() {
+        google.accounts.oauth2.revoke(access_token, () => {console.log('access token revoked')});
+      }
+      function loadCalendar() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'https://www.googleapis.com/calendar/v3/calendars/primary/events');
+        xhr.setRequestHeader('Authorization', 'Bearer ' + access_token);
+        xhr.send();
+      }
+      
+    </script><!--
+    <h1>Comments section (test)</h1>
+    <input id="commentInput" placeholder="Comment value..">
+        <button onclick="writeSheet()">Send</button>
+    <div id="content"></div>-->
+    <div id="player"></div>
+  </body>
+</html>
