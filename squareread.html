@@ -74,7 +74,7 @@ document.onkeydown = function(event) {
 
 function updatePlayerPosition() {
     if (player) {
-        player.style.animation = 'animate 2s infinite';
+        player.style.animation = 'animate 2s';
         player.style.top = y + 'px';
         player.style.left = x + 'px';
     }
@@ -88,9 +88,9 @@ function updatePlayerPosition() {
             scope: 'https://www.googleapis.com/auth/spreadsheets',
             callback: (tokenResponse) => {
                 access_token = tokenResponse.access_token;
-                setInterval(readSheet, 1000); // Call readSheet() after receiving the token
+                setInterval(readSheet, 4000); // Call readSheet() after receiving the token
                 //setInterval(writeSheet, 1000); // Call writeSheet() after receiving the token
-                setInterval(updatePlayerPosition, 1000);
+                //setInterval(updatePlayerPosition, 1000);
             },
         });
     }
@@ -99,28 +99,32 @@ function updatePlayerPosition() {
         await client.requestAccessToken();
             console.log("Access token received");
     } 
-    function readSheet(){
+    function readSheet() {
         var spreadsheetId = '1hdorOCQ1gB3miH0I0h4JH2PauSVRmIkJE3BrhWRDjrE';
         var range = 'Sheet1!A3:C3';
         var xhr = new XMLHttpRequest();
-        xhr.open('GET',`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`);
+        xhr.open('GET', `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`);
         xhr.setRequestHeader('Authorization', 'Bearer ' + access_token);
         xhr.onreadystatechange = function(e) {
-            if(xhr.responseText){
+            if (xhr.readyState === 4 && xhr.status === 200) { // Check if request is complete and successful
                 var responseObject = JSON.parse(xhr.responseText);
-                var valuesArray = responseObject.values;
-                //console.log(valuesArray[0][0]);
-                //console.log(valuesArray[0][1]);
-                x=valuesArray[0][0];
-                y=valuesArray[0][1];
-                fromTop = oldY;
-                toTop = y;
-                fromLeft = oldX;
-                toLeft = x;
-                oldX = x;
-                oldY = y;
-                console.log(x);
-                console.log(y);
+                if (responseObject.values) { // Check if values exist in the response
+                    var valuesArray = responseObject.values;
+                    x = valuesArray[0][0];
+                    y = valuesArray[0][1];
+                    fromTop = oldY;
+                    toTop = y;
+                    fromLeft = oldX;
+                    toLeft = x;
+                    oldX = x;
+                    oldY = y;
+                    updatePlayerPosition();
+                    player.style.animation = 'animate 2s';
+                    console.log(x);
+                    console.log(y);
+                } else {
+                    console.log("No values found in the response.");
+                }
             }
         };
         xhr.send(null);
