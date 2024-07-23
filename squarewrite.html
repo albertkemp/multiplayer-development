@@ -49,7 +49,7 @@ window.addEventListener('load', function(){
             callback: (tokenResponse) => {
                 access_token = tokenResponse.access_token;
                 //setInterval(readSheet, 1000); // Call readSheet() after receiving the token
-                setInterval(writeSheet, 1000); // Call writeSheet() after receiving the token
+                setInterval(writeSheet, 500); // Call writeSheet() after receiving the token
             },
         });
     }
