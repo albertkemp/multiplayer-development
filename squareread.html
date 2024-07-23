@@ -88,7 +88,7 @@ function updatePlayerPosition() {
             scope: 'https://www.googleapis.com/auth/spreadsheets',
             callback: (tokenResponse) => {
                 access_token = tokenResponse.access_token;
-                setInterval(readSheet, 4000); // Call readSheet() after receiving the token
+                setInterval(readSheet, 3500); // Call readSheet() after receiving the token
                 //setInterval(writeSheet, 1000); // Call writeSheet() after receiving the token
                 //setInterval(updatePlayerPosition, 1000);
             },
