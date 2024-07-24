@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://accounts.google.com/gsi/client" onload="initClient()" async defer></script>
+    <style>
+        #player {
+            background-color: red;
+            height: 100px;
+            width: 100px;
+            position: relative; /* Added position property */
+        }
+        #player2{
+            background-color:blue;
+            height:100px;
+            width:100px;
+            position:absolute;
+        }
+    </style>
+  </head>
+  <body onload="getToken()">
+    <script>
+        
+        let fromTop = 0;
+        let toTop = 100;
+        let fromLeft = 0;
+        let toLeft = 100;
+
+        // Create a style element
+        const style = document.createElement('style');
+        document.head.appendChild(style);
+
+        // Define keyframes
+        const keyframes = `
+            @keyframes animate {
+                from { top: ${fromTop}px; left: ${fromLeft}px; }
+                to { top: ${toTop}px; left: ${toLeft}px; }
+            }
+        `;
+
+        // Append the keyframes to the style element
+        style.sheet.insertRule(keyframes, style.sheet.cssRules.length);
+
+        // Function to apply the animation to the player element
+        function applyAnimation() {
+            if (!player) {
+                player = document.getElementById('player'); // Assuming 'player' is the ID of your animated element
+            }
+            // Apply the animation with the 'forwards' fill mode
+            player.style.animation = 'animate 2.5s linear forwards'; // Adjust the duration as needed
+        }
+
+        var player;
+        var bluePlayer;
+        
+
+            var speed = 20;
+    // Ensure x and y are defined globally
+        var oldX = 0;
+        var oldY=0;
+        var x = 0; // Initial horizontal position
+        var y = 0; // Initial vertical position
+
+        var blueX=0;
+        var blueY=0;
+
+    // Ensure player is globally accessible
+    //var player;
+
+        window.addEventListener('load', function() {
+            player = document.getElementById('player');
+            bluePlayer = document.getElementById('player2');
+            //player.style.animation = 'animate 2s';
+            player.style.top = y + 'px';
+            player.style.left = x + 'px';
+            getToken();
+        });
+
+        document.onkeydown = function(event) {
+            switch (event.keyCode) {
+                case 37: // Left arrow
+                    blueX -= speed;
+                    break;
+                case 38: // Up arrow
+                    blueY -= speed;
+                    break;
+                case 39: // Right arrow
+                    blueX += speed;
+                    break;
+                case 40: // Down arrow
+                    blueY += speed;
+                    break;
+            }
+            movePlayer();
+        };
+
+        function movePlayer() {
+            if (bluePlayer) {
+                bluePlayer.style.top = blueY + 'px';
+                bluePlayer.style.left = blueX + 'px';
+            }
+        }
+        function updatePlayerPosition() {
+            if (player) {
+                // Remove the existing keyframes to ensure they don't interfere
+                if (style.sheet.cssRules.length > 0) {
+                    style.sheet.deleteRule(0);
+                }
+
+                // Update keyframes with new positions
+                const newKeyframes = `
+                    @keyframes animate {
+                        from { top: ${fromTop}px; left: ${fromLeft}px; }
+                        to { top: ${toTop}px; left: ${toLeft}px; }
+                    }
+                `;
+
+                // Append the new keyframes to the style element
+                style.sheet.insertRule(newKeyframes, 0);
+                player.style.top = y + 'px';
+                player.style.left = x + 'px';
+                // Apply the new animation to the player element
+                player.style.animation = 'none'; // Reset animation to ensure it can restart
+                // Force reflow/repaint for the reset to take effect
+                void player.offsetWidth;
+                // Re-apply the animation with the new keyframes
+                player.style.animation = 'animate 2.5s forwards';
+            }
+        }
+        var client;
+        var access_token;
+
+        function initClient() {
+            client = google.accounts.oauth2.initTokenClient({
+                client_id: '226709415864-ac5fq30k52hhdnn12dq3csuimlujtle3.apps.googleusercontent.com',
+                scope: 'https://www.googleapis.com/auth/spreadsheets',
+                callback: (tokenResponse) => {
+                    access_token = tokenResponse.access_token;
+                    setInterval(readSheet, 2500); // Call readSheet() after receiving the token
+                    setInterval(writeSheet, 2500); // Call writeSheet() after receiving the token
+                    //setInterval(updatePlayerPosition, 1000);
+                },
+            });
+        }
+        
+        async function getToken() {
+            await client.requestAccessToken();
+                console.log("Access token received");
+        } 
+        function readSheet() {
+            var spreadsheetId = '1hdorOCQ1gB3miH0I0h4JH2PauSVRmIkJE3BrhWRDjrE';
+            var range = 'Sheet1!A3:C3';
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}`);
+            xhr.setRequestHeader('Authorization', 'Bearer ' + access_token);
+            xhr.onreadystatechange = function(e) {
+                if (xhr.readyState === 4 && xhr.status === 200) { // Check if request is complete and successful
+                    var responseObject = JSON.parse(xhr.responseText);
+                    if (responseObject.values) { // Check if values exist in the response
+                        var valuesArray = responseObject.values;
+                        x = valuesArray[0][0];
+                        y = valuesArray[0][1];
+                        fromTop = oldY;
+                        toTop = y;
+                        fromLeft = oldX;
+                        toLeft = x;
+                        oldX = x;
+                        oldY = y;
+                        updatePlayerPosition();
+                        player.style.animation = 'animate 2s';
+                        console.log(x);
+                        console.log(y);
+                    } else {
+                        console.log("No values found in the response.");
+                    }
+                }
+            };
+            xhr.send(null);
+        }
+        function writeSheet(){
+                    var spreadsheetId = '1hdorOCQ1gB3miH0I0h4JH2PauSVRmIkJE3BrhWRDjrE';
+                    var range = 'Sheet1!A4:B4';
+                    var xhr = new XMLHttpRequest();
+                    var params = {
+                        "range": range,
+                        "majorDimension": "ROWS",
+                        "values": [
+                            [blueX,blueY]
+                        ],
+                    };
+                    xhr.open('PUT', `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?valueInputOption=USER_ENTERED`);
+                    console.log(access_token);
+                    xhr.setRequestHeader('Authorization', 'Bearer ' + access_token);
+                    xhr.send(JSON.stringify(params));
+            }
+        
+            function revokeToken() {
+                google.accounts.oauth2.revoke(access_token, () => {console.log('access token revoked')});
+            }
+            function loadCalendar() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'https://www.googleapis.com/calendar/v3/calendars/primary/events');
+                xhr.setRequestHeader('Authorization', 'Bearer ' + access_token);
+                xhr.send();
+            }
+    </script>
+    <div id="player"></div>
+    <div id="player2"></div>
+  </body>
+</html>
